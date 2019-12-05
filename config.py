@@ -16,13 +16,12 @@ TEST_NAME = ['Real']
 TEST_ONLY = False
 CPU = False
 N_GPUs = 1
-# LOSS = '1*VGG54+0.5*L1+0.001*RLSGAN+1*L1+0.01*TV'
 LOSS = '1*L1'
 PRECISION = 'single'
 # MODEL
 MODEL_NAME = 'RealSR'
 
-parser = argparse.ArgumentParser(description="SuperResolution_V1")
+parser = argparse.ArgumentParser(description="RealSR")
 
 # Model_1 EDSR
 parser.add_argument('--act', type=str, default='relu',
@@ -35,13 +34,9 @@ parser.add_argument('--extend', type=str, default='.',
 parser.add_argument('--n_feats', type=int, default=64,
                     help='number of feature maps')
 
-parser.add_argument('--dilation', action='store_true',
-                    help='use dilated convolution')
 parser.add_argument('--precision', type=str, default='single',
                     choices=('single', 'half'),
                     help='FP precision for test (single | half)')
-
-
 
 # DATA configuration
 parser.add_argument("--batch-size", type=int, default=BATCH_SIZE,
@@ -104,8 +99,6 @@ parser.add_argument('--lr', type=float, default=0.0001,
                         help='learning rate')
 parser.add_argument('--decay', type=str, default='1000',
                     help='learning rate decay type') 
-# 250-500-750-1000-1250-1500
-# 375-625-875-1125-1375-1625
 parser.add_argument('--gamma', type=float, default=0.5,
                     help='learning rate decay factor for step decay')
 parser.add_argument('--optimizer', default='ADAM',
@@ -125,9 +118,9 @@ parser.add_argument('--gclip', type=float, default=0,
 # Log specifications
 parser.add_argument('--save', type=str, default='RealSR_modified_head',
                     help='file name to save')
-parser.add_argument('--load', type=str, default='RealSR_modified_head',
+parser.add_argument('--load', type=str, default='',
                     help='file name to load')
-parser.add_argument('--resume', type=int, default=-1,
+parser.add_argument('--resume', type=int, default=0,
                     help='resume from specific checkpoint')
 parser.add_argument('--save_models', action='store_true',
                     help='save all intermediate models')
@@ -137,7 +130,6 @@ parser.add_argument('--save_results', default=True,
                     help='save output results')
 parser.add_argument('--save_gt', action='store_true',
                     help='save low-resolution and high-resolution images together')
-
 
 args = parser.parse_args()
 
