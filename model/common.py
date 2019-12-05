@@ -5,11 +5,6 @@ import torch.nn.functional as F
 import numpy as np 
 from torch.autograd import Variable, Function
 
-def default_conv(in_channels, out_channels, kernel_size, dilation=1, bias=True):
-    return nn.Conv2d(
-        in_channels, out_channels, kernel_size,
-        dilation=dilation,
-        padding=(kernel_size - 1) // 2, bias=bias)
 
 class Shuffle_d(nn.Module):
     def __init__(self, scale=2):
