@@ -24,7 +24,7 @@ class basicblock(nn.Module):
 
 
 class backbone(nn.Sequential):
-    def __init__(self,in_feats,out_feats,n_blocks=8, ksize=3):
+    def __init__(self,in_feats,out_feats,n_blocks=16, ksize=3):
         m = [nn.Conv2d(in_feats,out_feats,kernel_size=ksize, padding=1)]
         for _ in range(n_blocks):
             m.append(basicblock(out_feats,out_feats,ksize))
@@ -38,9 +38,15 @@ class RealSR(nn.Module):
         n_colors = args.n_colors
         n_feats = args.n_feats
 
-        self.up = nn.Upsample(size=None, scale_factor=2, mode='bilinear', align_corners=None)
         self.shuffle_up_4= nn.PixelShuffle(4)
         self.shuffle_up_2= nn.PixelShuffle(2)
+        '''  
+        we use "self.head" block for processing RGB image input(3xHxW).
+        In RealSR, they only process Y channel of YCrCb Image input(1xHxW).
+        If you hope to do as the RealSR,You can replace self.head and self.backbone with:
+        self.head = Shuffle_d(scale = 4)
+        self.backbone = backbone(4*4, n_feats)
+        '''
         self.head = nn.Sequential(*[
             nn.Conv2d(n_colors,n_feats//4,3,padding=1,stride=1),
             nn.Conv2d(n_feats//4,n_feats//16,3,padding=1,stride=1),
