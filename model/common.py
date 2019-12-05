@@ -117,14 +117,7 @@ class pixelConv(nn.Module):
             
         p = self._get_index(kernel_set,dtype)
         p = p.contiguous().permute(0, 2, 3, 1).long()
-
-        # p = torch.cat([torch.clamp(p[..., :N], 0, x.size(2) - 1), torch.clamp(p[..., N:], 0, x.size(3) - 1)],
-        #                  dim=-1).long()
-       
-        #(b,3,h,w,ksize**2)
         x_pixel_set = self._get_x_q(x, p, N)
-
-        
         b,c,h,w = kernel_set.size()
         kernel_set_reshape = kernel_set.reshape(-1,self.ksize**2,3,h,w).permute(0,2,3,4,1)
         x_ = x_pixel_set
@@ -138,12 +131,12 @@ class pixelConv(nn.Module):
         '''
         get absolute index of each pixel in image
         '''
-        N, b, h, w = self.ksize**2, kernel_set.size(0), kernel_set.size(2), kernel_set.size(3) # 坐标包含 ksize*ksize 个(x,y)
+        N, b, h, w = self.ksize**2, kernel_set.size(0), kernel_set.size(2), kernel_set.size(3)
         # get absolute index of center index
         p_0_x, p_0_y = np.meshgrid(range(self.padding, h + self.padding), range(self.padding, w + self.padding), indexing='ij')
         p_0_x = p_0_x.flatten().reshape(1, 1, h, w).repeat(N, axis=1)
         p_0_y = p_0_y.flatten().reshape(1, 1, h, w).repeat(N, axis=1)
-        p_0 = np.concatenate((p_0_x, p_0_y), axis=1)  # 以并联的形式 前 N 个 x轴 坐标、后 N 个 y轴 坐标
+        p_0 = np.concatenate((p_0_x, p_0_y), axis=1) 
         p_0 = Variable(torch.from_numpy(p_0).type(dtype), requires_grad=False)
 
         # get relative index around center pixel
@@ -151,47 +144,26 @@ class pixelConv(nn.Module):
                                    range(-(self.ksize - 1) // 2, (self.ksize - 1) // 2 + 1), indexing='ij')
         # (2N, 1)
         p_n = np.concatenate((p_n_x.flatten(), p_n_y.flatten()))
-        p_n = np.reshape(p_n, (1, 2 * N, 1, 1))  # 以并联的形式 前 N 个 x轴 坐标、后 N 个 y轴 坐标
+        p_n = np.reshape(p_n, (1, 2 * N, 1, 1))
         p_n = Variable(torch.from_numpy(p_n).type(dtype), requires_grad=False) 
         p = p_0 + p_n
         p = p.repeat(b,1,1,1)
         return p
     def _get_x_q(self, x, q, N):
-        '''
-        返回给定坐标矩阵中对应的特征图中的特征值
-        '''
+
         b, h, w, _ = q.size()  # dimension of q: (b,h,w,2N)
         padded_w = x.size(3)
         c = x.size(1)
         # (b, c, h*padded_w)
         x = x.contiguous().view(b, c, -1)
         # (b, h, w, N)
-        # index_x*w + index_y 变换到1维之后的真实索引 其中索引大小小于 index_x<= w-1 index_y <= H-1
+        # index_x*w + index_y
         index = q[..., :N] * padded_w + q[...,N:] 
 
         # (b, c, h*w*N)
         index = index.contiguous().unsqueeze(dim=1).expand(-1, c, -1, -1, -1).contiguous().view(b, c, -1)
         x_offset = x.gather(dim=-1, index=index).contiguous().view(b, c, h, w, N)
         return x_offset
-
-class MeanBlur(nn.Module):
-    def __init__(self):
-        super(MeanBlur, self).__init__()
-        kernel = np.array([[1./25.,1./25., 1./25.,1./25., 1./25.],
-                      [1./25.,1./25., 1./25.,1./25., 1./25.],
-                       [1./25.,1./25., 1./25.,1./25., 1./25.],
-                          [1./25.,1./25., 1./25.,1./25., 1./25.],
-                          [1./25.,1./25., 1./25.,1./25., 1./25.]])
-       
-        kernel = torch.FloatTensor(kernel)
-        kernel = kernel.unsqueeze(0).unsqueeze(0).repeat(3,1,1,1)
-        self.mean = nn.Conv2d(3, 3, kernel_size=5, stride=1, padding=2,groups=3,bias=False)
-        self.mean.weight = nn.Parameter(kernel, requires_grad=False)
-   
-    def forward(self, x):
-        x = self.mean(x)
-        return x
-    
 
 class GaussianBlur(nn.Module):
     def __init__(self):
@@ -230,17 +202,14 @@ class Laplacian_pyramid(nn.Module):
 
     def Prdown(self,x):
         x_ = self.Gau(x)
-        x_ = self.pool(x_)
-#         x_ = x_[:,:,::2,::2]
+        x_ = x_[:,:,::2,::2]
         return x_
 
     def PrUp(self,x):
         b,c,h,w = x.size()
-#         up_x = torch.zeros((b,c,h*2,w*2),device='cuda')
-#         up_x[:,:,::2,::2]= x
-        up_x = F.interpolate(x,scale_factor=2,mode='bilinear')
-        up_x = self.Gau(up_x)
-        
+        up_x = torch.zeros((b,c,h*2,w*2),device='cuda')
+        up_x[:,:,::2,::2]= x
+        up_x = self.Gau(up_x)  
         return up_x
 
 class Laplacian_reconstruction(nn.Module):
@@ -250,9 +219,8 @@ class Laplacian_reconstruction(nn.Module):
         self.mean = MeanBlur()
     def forward(self, x_lap,x_gau):
         b,c,h,w = x_gau.size()
-#         up_x = torch.zeros((b,c,h*2,w*2),device='cuda')
-#         up_x[:,:,::2,::2]= x_gau
-        up_x = F.interpolate(x_gau,scale_factor=2,mode='bilinear')
+        up_x = torch.zeros((b,c,h*2,w*2),device='cuda')
+        up_x[:,:,::2,::2]= x_gau
         up_x = self.Gau(up_x) + x_lap
         return up_x
     
