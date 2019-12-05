@@ -70,12 +70,6 @@ class Trainer():
         self.loss.end_log(len(self.loader_train))
         self.error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
-        
-#         # save the lastest model 
-#         self.ckp.save_in_training(self, epoch, is_best=False)
-                
-
-
 
     def test(self):
         torch.set_grad_enabled(False)
@@ -126,8 +120,7 @@ class Trainer():
             self.ckp.end_background()
 
         if not self.args.test_only:
-            #以Urban100的PSNR值为准，进行保存
-            self.ckp.save(self, epoch, is_best=(best[1][-1, self.args.scale-2] + 1 == epoch))
+            self.ckp.save(self, epoch, is_best=(best[1][0, self.args.scale-2] + 1 == epoch))
 
         self.ckp.write_log(
             'Total: {:.2f}s\n'.format(timer_test.toc()), refresh=True
