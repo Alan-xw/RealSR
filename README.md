@@ -1,2 +1,3 @@
 # RealSR
-Unofficial implementation of RealSR
+Unofficial implementation of RealSR.
+
