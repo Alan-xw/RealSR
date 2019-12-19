@@ -73,7 +73,6 @@ class RealSR(nn.Module):
         # branch_1
         f_1 = self.shuffle_up_4(f_)
         out_1 = self.branch_1(f_1,Lap_1)
-        out_1 = 1.2 * out_1 
         # branch_2
         f_2 = self.shuffle_up_2(f_)
         out_2 = self.branch_2(f_2, Lap_2)
@@ -85,12 +84,3 @@ class RealSR(nn.Module):
         merge = self.laplacian_rec(out_1,merge_x2)
         
         return merge
-
-if __name__ == "__main__":
-    # pixel_conv = RealSR() 
-  
-    x =  torch.rand((4,3,4,4))
-    x_1= x.mean(dim=-1,keepdim=True).mean(dim=-2,keepdim=True)
-    x_2 = x.mean(dim=(2,3),keepdim=True)
-    print(x_1[0,0],x_2[0,0])
-    # x = pixel_conv(x)
