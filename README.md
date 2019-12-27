@@ -10,7 +10,7 @@ python main.py --reset
 ```
 
 ## testing
-For testing,you can use the command below to test the model on benchmarks
+For testing,you can use the command below to test the model on benchmarks.
 ```
 python main.py --test-only True
 ```
