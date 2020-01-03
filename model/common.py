@@ -178,20 +178,43 @@ class GaussianBlur(nn.Module):
         x = self.gaussian(x)
         return x
 
+class GaussianBlur_Up(nn.Module):
+    def __init__(self):
+        super(GaussianBlur_Up, self).__init__()
+        kernel = np.array([[1./256., 4./256., 6./256., 4./256., 1./256.],
+                        [4./256., 16./256., 24./256., 16./256., 4./256.],
+                        [6./256., 24./256., 36./256., 24./256., 6./256.],
+                        [4./256., 16./256., 24./256., 16./256., 4./256.],
+                        [1./256., 4./256., 6./256., 4./256., 1./256.]])
+        kernel = kernel*4
+        kernel = torch.FloatTensor(kernel)
+        kernel = kernel.unsqueeze(0).unsqueeze(0).repeat(3,1,1,1)
+        self.gaussian = nn.Conv2d(3, 3, kernel_size=5, stride=1, padding=2,groups=3,bias=False)
+        self.gaussian.weight = nn.Parameter(kernel, requires_grad=False)
+ 
+    def forward(self, x):
+        x = self.gaussian(x)
+        return x
+
+
 class Laplacian_pyramid(nn.Module):
     def __init__(self,step=3):
         super(Laplacian_pyramid, self).__init__()
         self.Gau = GaussianBlur()
+        self.Gau_up = GaussianBlur_Up()
         self.mean = MeanBlur()
         self.step = step
-        self.pool = nn.AvgPool2d(2,stride=2)
+        
     def forward(self, x):
         Gaussian_lists = [x]
         Laplacian_lists= []
+        size_lists = [x.size()[2:]]
         for _ in range(self.step-1):
             gaussian_down = self.Prdown(Gaussian_lists[-1])
             Gaussian_lists.append(gaussian_down)
-            Lap = Gaussian_lists[-2]-self.PrUp(Gaussian_lists[-1])
+            size_lists.append(gaussian_down.size()[2:])
+            Gaussian_lists.append(gaussian_down)
+            Lap = Gaussian_lists[-2]-self.PrUp(Gaussian_lists[-1],size_lists[-2])
             Laplacian_lists.append(Lap)
         return Gaussian_lists,Laplacian_lists
 
@@ -200,11 +223,12 @@ class Laplacian_pyramid(nn.Module):
         x_ = x_[:,:,::2,::2]
         return x_
 
-    def PrUp(self,x):
-        b,c,h,w = x.size()
-        up_x = torch.zeros((b,c,h*2,w*2),device='cuda')
+    def PrUp(self,x,sizes):
+        b, c, _, _ = x.size()
+        h,w = sizes
+        up_x = torch.zeros((b,c,h,w),device='cuda')
         up_x[:,:,::2,::2]= x
-        up_x = self.Gau(up_x)  
+        up_x = self.Gau_up(up_x)  
         return up_x
 
 class Laplacian_reconstruction(nn.Module):
