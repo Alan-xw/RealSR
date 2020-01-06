@@ -244,7 +244,7 @@ class Laplacian_reconstruction(nn.Module):
         up_x = torch.zeros((b,c,h*2,w*2),device='cuda')
         up_x[:,:,::2,::2]= x_gau.mul(255)
         up_x = self.Gau(up_x) + x_lap.mul(255)
-        return up_x.mul(255)
+        return up_x.mul(1./255)
     
 
 if __name__ == "__main__":
