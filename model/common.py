@@ -206,6 +206,7 @@ class Laplacian_pyramid(nn.Module):
         self.step = step
         
     def forward(self, x):
+        x = x.mul(255).clamp(0, 255)
         Gaussian_lists = [x]
         Laplacian_lists= []
         size_lists = [x.size()[2:]]
@@ -215,8 +216,10 @@ class Laplacian_pyramid(nn.Module):
             size_lists.append(gaussian_down.size()[2:])
             Gaussian_lists.append(gaussian_down)
             Lap = Gaussian_lists[-2]-self.PrUp(Gaussian_lists[-1],size_lists[-2])
+            Lap = lap.mul(1./255.)
             Laplacian_lists.append(Lap)
-        return Gaussian_lists,Laplacian_lists
+        Gaussian_lists = [gau.mul(1./255.) for gau in Gaussian_lists]
+        return Gaussian_lists, Laplacian_lists
 
     def Prdown(self,x):
         x_ = self.Gau(x)
@@ -239,9 +242,9 @@ class Laplacian_reconstruction(nn.Module):
     def forward(self, x_lap,x_gau):
         b,c,h,w = x_gau.size()
         up_x = torch.zeros((b,c,h*2,w*2),device='cuda')
-        up_x[:,:,::2,::2]= x_gau
-        up_x = self.Gau(up_x) + x_lap
-        return up_x
+        up_x[:,:,::2,::2]= x_gau.mul(255)
+        up_x = self.Gau(up_x) + x_lap.mul(255)
+        return up_x.mul(255)
     
 
 if __name__ == "__main__":
