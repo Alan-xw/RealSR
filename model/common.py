@@ -202,7 +202,6 @@ class Laplacian_pyramid(nn.Module):
         super(Laplacian_pyramid, self).__init__()
         self.Gau = GaussianBlur()
         self.Gau_up = GaussianBlur_Up()
-        self.mean = MeanBlur()
         self.step = step
         
     def forward(self, x):
@@ -238,7 +237,6 @@ class Laplacian_reconstruction(nn.Module):
     def __init__(self):
         super(Laplacian_reconstruction, self).__init__()
         self.Gau = GaussianBlur()
-        self.mean = MeanBlur()
     def forward(self, x_lap,x_gau):
         b,c,h,w = x_gau.size()
         up_x = torch.zeros((b,c,h*2,w*2),device='cuda')
