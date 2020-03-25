@@ -215,7 +215,7 @@ class Laplacian_pyramid(nn.Module):
             size_lists.append(gaussian_down.size()[2:])
             Gaussian_lists.append(gaussian_down)
             Lap = Gaussian_lists[-2]-self.PrUp(Gaussian_lists[-1],size_lists[-2])
-            Lap = lap.mul(1./255.)
+            Lap = Lap.mul(1./255.)
             Laplacian_lists.append(Lap)
         Gaussian_lists = [gau.mul(1./255.) for gau in Gaussian_lists]
         return Gaussian_lists, Laplacian_lists
