@@ -4,7 +4,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np 
 from torch.autograd import Variable, Function
-
+from PIL import Image
+import matplotlib.pyplot as plt
 class MeanShift(nn.Conv2d):
     def __init__(
         self, rgb_range,
@@ -216,7 +217,6 @@ class Laplacian_pyramid(nn.Module):
         self.step = step
         
     def forward(self, x):
-        x = x.mul(255).clamp(0, 255)
         Gaussian_lists = [x]
         Laplacian_lists= []
         size_lists = [x.size()[2:]]
@@ -225,9 +225,7 @@ class Laplacian_pyramid(nn.Module):
             Gaussian_lists.append(gaussian_down)
             size_lists.append(gaussian_down.size()[2:])
             Lap = Gaussian_lists[-2]-self.PrUp(Gaussian_lists[-1],size_lists[-2])
-            Lap = Lap.mul(1./255.)
             Laplacian_lists.append(Lap)
-        Gaussian_lists = [gau.mul(1./255.) for gau in Gaussian_lists]
         return Gaussian_lists, Laplacian_lists
 
     def Prdown(self,x):
@@ -253,10 +251,7 @@ class Laplacian_reconstruction(nn.Module):
         up_x[:,:,::2,::2]= x_gau.mul(255)
         up_x = self.Gau(up_x) + x_lap.mul(255)
         return up_x.mul(1./255)
-    
 
-if __name__ == "__main__":
-    pixel_conv = pixelConv(in_feats=16, out_feats=3, ksize=5, rate=1) 
-    x =  torch.ones((4,3,10,10))
-    x1 = torch.ones((4,16,10,10))
-    x = pixel_conv(x1, x)
+if __name__ =='__main__':
+	pass
+
