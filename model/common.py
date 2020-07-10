@@ -244,13 +244,13 @@ class Laplacian_pyramid(nn.Module):
 class Laplacian_reconstruction(nn.Module):
     def __init__(self):
         super(Laplacian_reconstruction, self).__init__()
-        self.Gau = GaussianBlur()
+        self.Gau = GaussianBlur_Up()
     def forward(self, x_lap,x_gau):
         b,c,h,w = x_gau.size()
         up_x = torch.zeros((b,c,h*2,w*2),device='cuda')
-        up_x[:,:,::2,::2]= x_gau.mul(255)
-        up_x = self.Gau(up_x) + x_lap.mul(255)
-        return up_x.mul(1./255)
+        up_x[:,:,::2,::2]= x_gau
+        up_x = self.Gau(up_x) + x_lap
+        return up_x
 
 if __name__ =='__main__':
 	pass
