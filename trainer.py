@@ -85,7 +85,8 @@ class Trainer():
         for idx_data, d in enumerate(self.loader_test):
             for lr, hr, filename in tqdm(d, ncols=80):
                 lr, hr = self.prepare(lr, hr)
-                sr = self.model(lr)
+                with torch.no_grad():
+                    sr = self.model(lr)
                 
                 sr = utility.quantize(sr, self.args.rgb_range)
                 
@@ -137,7 +138,8 @@ class Trainer():
         for idx_data, d in enumerate(self.loader_test):
             for lr, hr, filename in tqdm(d, ncols=80):
                 lr, hr = self.prepare(lr, hr)
-                sr = self.model(lr)
+                 with torch.no_grad():
+                    sr = self.model(lr)
                 sr = utility.quantize(sr, self.args.rgb_range)
                 save_list = [sr]
                 
