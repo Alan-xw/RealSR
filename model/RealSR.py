@@ -20,7 +20,7 @@ class basicblock(nn.Module):
         ]
         self.block = nn.Sequential(*block)
     def forward(self, x):
-        return self.block(x)
+        return self.block(x)+x
 
 
 class backbone(nn.Sequential):
